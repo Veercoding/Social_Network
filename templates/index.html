@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConnectU — Social Media Friend Network</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ============================================================
+     LOADER — shows while page/algorithm is processing
+============================================================ -->
+<div id="loader" class="loader-overlay">
+    <div class="loader-box">
+        <div class="spinner"></div>
+        <p id="loader_msg">Processing...</p>
+    </div>
+</div>
+
+<!-- ============================================================
+     PAGE 1: LOGIN / SIGNUP
+============================================================ -->
+<div id="auth_page" class="page active">
+    <div class="auth-container">
+        <div class="auth-logo">
+            <div class="logo-icon">C</div>
+            <h1>ConnectU</h1>
+            <p>Connect with friends. Discover your network.</p>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div id="login_form" class="auth-card">
+            <h2>Log In</h2>
+            <input type="text" id="login_id" placeholder="User ID" />
+            <input type="password" id="login_pass" placeholder="Password" />
+            <button onclick="login()">Log In</button>
+            <p id="login_msg" class="msg"></p>
+            <div class="auth-switch">
+                Don't have an account?
+                <span onclick="showSignup()">Sign Up</span>
+            </div>
+        </div>
+
+        <!-- SIGNUP FORM -->
+        <div id="signup_form" class="auth-card hidden">
+            <h2>Create Account</h2>
+            <input type="text" id="signup_id" placeholder="Choose a User ID" />
+            <input type="text" id="signup_name" placeholder="Full Name" />
+            <input type="password" id="signup_pass" placeholder="Password" />
+            <button onclick="signup()">Create Account</button>
+            <p id="signup_msg" class="msg"></p>
+            <div class="auth-switch">
+                Already have an account?
+                <span onclick="showLogin()">Log In</span>
+            </div>
+        </div>
+
+        <div class="auth-footer">
+            Group 9 — Data Structures & Algorithms CAT 2
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MAIN APP (shown after login)
+============================================================ -->
+<div id="app_page" class="page hidden">
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-logo" onclick="showTab('dashboard')">ConnectU</div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('dashboard')" id="tab_dashboard">
+                🏠 Home
+            </button>
+            <button class="nav-tab" onclick="showTab('network')" id="tab_network">
+                🌐 Network
+            </button>
+            <button class="nav-tab" onclick="showTab('fun')" id="tab_fun">
+                🎮 Fun
+            </button>
+            <button class="nav-tab" onclick="showTab('complexity')" id="tab_complexity">
+                📊 Complexity
+            </button>
+        </div>
+        <div class="nav-user">
+            <div id="nav_avatar" class="nav-avatar">?</div>
+            <span id="nav_name">User</span>
+            <button class="logout-btn" onclick="logout()">Log Out</button>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+         TAB 1: DASHBOARD
+    ============================================================ -->
+    <div id="tab_content_dashboard" class="tab-content active">
+        <div class="dashboard-grid">
+
+            <!-- LEFT COLUMN -->
+            <div class="left-col">
+
+                <!-- Profile Card -->
+                <div class="card profile-card">
+                    <div id="profile_avatar" class="big-avatar">?</div>
+                    <div class="profile-info">
+                        <h2 id="profile_name">Loading...</h2>
+                        <p id="profile_id" class="muted">@user</p>
+                        <p id="profile_bio" class="bio-text" onclick="editBio()">
+                            Click to edit bio...
+                        </p>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <span id="stat_friends" class="stat-num">0</span>
+                            <span class="stat-label">Friends</span>
+                        </div>
+                        <div class="stat">
+                            <span id="stat_suggestions" class="stat-num">0</span>
+                            <span class="stat-label">Suggestions</span>
+                        </div>
+                        <div class="stat">
+                            <span id="stat_requests" class="stat-num">0</span>
+                            <span class="stat-label">Requests</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Operation Logger -->
+                <div class="card">
+                    <h3 class="card-title">⚙️ Operation Logger</h3>
+                    <p class="card-sub">Live backend data structure operations</p>
+                    <div id="op_log" class="op-log">
+                        <p class="log-empty">Operations will appear here...</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- MIDDLE COLUMN -->
+            <div class="middle-col">
+
+                <!-- Friend Requests -->
+                <div class="card" id="requests_card">
+                    <h3 class="card-title">📬 Friend Requests</h3>
+                    <div id="requests_list" class="list-area">
+                        <p class="empty-msg">No pending requests</p>
+                    </div>
+                </div>
+
+                <!-- My Friends -->
+                <div class="card">
+                    <h3 class="card-title">👥 My Friends</h3>
+                    <div id="friends_list" class="list-area">
+                        <p class="empty-msg">No friends yet — add some!</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="right-col">
+
+                <!-- BFS Suggestions -->
+                <div class="card">
+                    <h3 class="card-title">💡 Friend Suggestions</h3>
+                    <p class="card-sub">Powered by BFS Algorithm — O(V+E)</p>
+                    <div id="suggestions_list" class="list-area">
+                        <p class="empty-msg">No suggestions yet</p>
+                    </div>
+                </div>
+
+                <!-- Search Users -->
+                <div class="card">
+                    <h3 class="card-title">🔍 Search Users</h3>
+                    <div class="search-row">
+                        <input type="text" id="search_input"
+                            placeholder="Search by name or ID..."
+                            oninput="searchUsers()" />
+                    </div>
+                    <div id="search_results" class="list-area">
+                        <p class="empty-msg">Start typing to search...</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         TAB 2: NETWORK VISUALIZER
+    ============================================================ -->
+    <div id="tab_content_network" class="tab-content hidden">
+        <div class="network-page">
+            <div class="card network-card">
+                <div class="network-header">
+                    <div>
+                        <h3 class="card-title">🌐 Live Network Graph</h3>
+                        <p class="card-sub">Visual representation of the Graph data structure</p>
+                    </div>
+                    <button onclick="loadNetwork()">🔄 Refresh Graph</button>
+                </div>
+                <canvas id="network_canvas"></canvas>
+                <div class="network-legend">
+                    <span class="legend-item">
+                        <span class="legend-dot"></span> User (Node/Vertex)
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-line"></span> Friendship (Edge)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         TAB 3: FUN FEATURES
+    ============================================================ -->
+    <div id="tab_content_fun" class="tab-content hidden">
+        <div class="fun-grid">
+
+            <!-- Six Degrees of Separation -->
+            <div class="card fun-card">
+                <div class="fun-icon">🌍</div>
+                <h3>Six Degrees of Separation</h3>
+                <p class="card-sub">Find the connection path between any two users using BFS</p>
+                <input type="text" id="six_start" placeholder="Start User ID" />
+                <input type="text" id="six_end" placeholder="End User ID" />
+                <button onclick="sixDegrees()">Find Connection</button>
+                <div id="six_result" class="six-result hidden"></div>
+            </div>
+
+            <!-- Friend Leaderboard -->
+            <div class="card fun-card">
+                <div class="fun-icon">🏆</div>
+                <h3>Friend Leaderboard</h3>
+                <p class="card-sub">Ranked by friend count using Insertion Sort</p>
+                <button onclick="loadLeaderboard()">Show Leaderboard</button>
+                <div id="leaderboard_list" class="list-area"></div>
+            </div>
+
+            <!-- Friendship Strength -->
+            <div class="card fun-card">
+                <div class="fun-icon">💞</div>
+                <h3>Friendship Strength Meter</h3>
+                <p class="card-sub">Compatibility % based on mutual friends (Jaccard similarity)</p>
+                <input type="text" id="strength_u1" placeholder="User ID 1" />
+                <input type="text" id="strength_u2" placeholder="User ID 2" />
+                <button onclick="checkStrength()">Check Strength</button>
+                <div id="strength_result" class="strength-result hidden">
+                    <div class="strength-label">
+                        <span id="strength_names"></span>
+                        <span id="strength_pct" class="strength-pct">0%</span>
+                    </div>
+                    <div class="strength-bar-bg">
+                        <div id="strength_bar" class="strength-bar"></div>
+                    </div>
+                    <p id="strength_msg" class="strength-msg"></p>
+                </div>
+            </div>
+
+            <!-- Most Popular User -->
+            <div class="card fun-card">
+                <div class="fun-icon">👑</div>
+                <h3>Most Popular User</h3>
+                <p class="card-sub">Who has the most connections in the network?</p>
+                <button onclick="mostPopular()">Find Most Popular</button>
+                <div id="popular_result" class="popular-result hidden"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ============================================================
+         TAB 4: COMPLEXITY ANALYSIS
+    ============================================================ -->
+    <div id="tab_content_complexity" class="tab-content hidden">
+        <div class="complexity-page">
+
+            <div class="card">
+                <h3 class="card-title">📊 Complexity Analysis</h3>
+                <p class="card-sub">Time and Space complexity of all data structures and algorithms used</p>
+
+                <div class="complexity-section">
+                    <h4>Data Structure 1 — Hash Table</h4>
+                    <table class="complexity-table">
+                        <thead>
+                            <tr>
+                                <th>Operation</th>
+                                <th>Time Complexity</th>
+                                <th>Space Complexity</th>
+                                <th>Used For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Insert user</td>
+                                <td class="good">O(1) average</td>
+                                <td>O(n)</td>
+                                <td>Adding new user profile</td>
+                            </tr>
+                            <tr>
+                                <td>Lookup user</td>
+                                <td class="good">O(1) average</td>
+                                <td>O(1)</td>
+                                <td>Login, profile view</td>
+                            </tr>
+                            <tr>
+                                <td>Delete user</td>
+                                <td class="good">O(1) average</td>
+                                <td>O(1)</td>
+                                <td>Remove account</td>
+                            </tr>
+                            <tr>
+                                <td>Worst case</td>
+                                <td class="bad">O(n)</td>
+                                <td>O(n)</td>
+                                <td>Hash collision chain</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="complexity-section">
+                    <h4>Data Structure 2 — Graph (Adjacency List)</h4>
+                    <table class="complexity-table">
+                        <thead>
+                            <tr>
+                                <th>Operation</th>
+                                <th>Time Complexity</th>
+                                <th>Space Complexity</th>
+                                <th>Used For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Add node (user)</td>
+                                <td class="good">O(1)</td>
+                                <td>O(1)</td>
+                                <td>New user joins</td>
+                            </tr>
+                            <tr>
+                                <td>Add edge (friendship)</td>
+                                <td class="good">O(1)</td>
+                                <td>O(1)</td>
+                                <td>Friend request accepted</td>
+                            </tr>
+                            <tr>
+                                <td>Remove edge</td>
+                                <td class="mid">O(E)</td>
+                                <td>O(1)</td>
+                                <td>Unfriend</td>
+                            </tr>
+                            <tr>
+                                <td>Storage total</td>
+                                <td>—</td>
+                                <td class="mid">O(V + E)</td>
+                                <td>Entire network</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="complexity-section">
+                    <h4>Algorithm 1 — Breadth-First Search (BFS)</h4>
+                    <table class="complexity-table">
+                        <thead>
+                            <tr>
+                                <th>Case</th>
+                                <th>Time Complexity</th>
+                                <th>Space Complexity</th>
+                                <th>Used For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>All cases</td>
+                                <td class="mid">O(V + E)</td>
+                                <td class="mid">O(V)</td>
+                                <td>Friend suggestions</td>
+                            </tr>
+                            <tr>
+                                <td>Six degrees</td>
+                                <td class="mid">O(V + E)</td>
+                                <td class="mid">O(V)</td>
+                                <td>Shortest path finding</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="complexity-section">
+                    <h4>Algorithm 2 — Insertion Sort</h4>
+                    <table class="complexity-table">
+                        <thead>
+                            <tr>
+                                <th>Case</th>
+                                <th>Time Complexity</th>
+                                <th>Space Complexity</th>
+                                <th>Used For</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Best case</td>
+                                <td class="good">O(n)</td>
+                                <td class="good">O(1)</td>
+                                <td>Already sorted list</td>
+                            </tr>
+                            <tr>
+                                <td>Average case</td>
+                                <td class="mid">O(n²)</td>
+                                <td class="good">O(1)</td>
+                                <td>Friend suggestions ranking</td>
+                            </tr>
+                            <tr>
+                                <td>Worst case</td>
+                                <td class="bad">O(n²)</td>
+                                <td class="good">O(1)</td>
+                                <td>Leaderboard ranking</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+let currentUser = null
+let allUsers = []
+
+// ============================================================
+// LOADER FUNCTIONS
+// Show/hide loading spinner with custom message
+// ============================================================
+function showLoader(msg = "Processing...") {
+    document.getElementById("loader_msg").textContent = msg
+    document.getElementById("loader").classList.add("active")
+}
+
+function hideLoader() {
+    document.getElementById("loader").classList.remove("active")
+}
+
+// ============================================================
+// OPERATION LOGGER
+// Logs every backend operation with data structure info
+// ============================================================
+function logOp(message, type = "info") {
+    const log = document.getElementById("op_log")
+    const empty = log.querySelector(".log-empty")
+    if (empty) empty.remove()
+
+    const entry = document.createElement("div")
+    entry.className = `log-entry log-${type}`
+    entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`
+    log.insertBefore(entry, log.firstChild)
+
+    // Keep only last 10 logs
+    while (log.children.length > 10) {
+        log.removeChild(log.lastChild)
+    }
+}
+
+// ============================================================
+// AUTH: Show/hide login and signup forms
+// ============================================================
+function showSignup() {
+    document.getElementById("login_form").classList.add("hidden")
+    document.getElementById("signup_form").classList.remove("hidden")
+}
+
+function showLogin() {
+    document.getElementById("signup_form").classList.add("hidden")
+    document.getElementById("login_form").classList.remove("hidden")
+}
+
+// ============================================================
+// AUTH: Login
+// Sends POST to Flask /login
+// Flask does Hash Table O(1) lookup
+// ============================================================
+async function login() {
+    const user_id = document.getElementById("login_id").value.trim()
+    const password = document.getElementById("login_pass").value.trim()
+    const msg = document.getElementById("login_msg")
+
+    if (!user_id || !password) {
+        msg.textContent = "Please fill in all fields"
+        msg.className = "msg error"
+        return
+    }
+
+    showLoader("Logging in...")
+    const res = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id, password })
+    })
+    const data = await res.json()
+    hideLoader()
+
+    if (data.success) {
+        currentUser = data.user
+        logOp(`[HASH TABLE] Login lookup for '${user_id}' — O(1)`, "hash")
+        enterApp()
+    } else {
+        msg.textContent = data.message
+        msg.className = "msg error"
+    }
+}
+
+// ============================================================
+// AUTH: Signup
+// Sends POST to Flask /signup
+// Flask adds user to Hash Table + Graph
+// ============================================================
+async function signup() {
+    const user_id = document.getElementById("signup_id").value.trim()
+    const name = document.getElementById("signup_name").value.trim()
+    const password = document.getElementById("signup_pass").value.trim()
+    const msg = document.getElementById("signup_msg")
+
+    if (!user_id || !name || !password) {
+        msg.textContent = "Please fill in all fields"
+        msg.className = "msg error"
+        return
+    }
+
+    showLoader("Creating your account...")
+    const res = await fetch("/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id, name, password })
+    })
+    const data = await res.json()
+    hideLoader()
+
+    if (data.success) {
+        currentUser = data.user
+        logOp(`[HASH TABLE] New user '${name}' added — O(1)`, "hash")
+        logOp(`[GRAPH] New node created for '${name}'`, "graph")
+        enterApp()
+    } else {
+        msg.textContent = data.message
+        msg.className = "msg error"
+    }
+}
+
+// ============================================================
+// AUTH: Logout
+// ============================================================
+async function logout() {
+    await fetch("/logout", { method: "POST" })
+    currentUser = null
+    document.getElementById("app_page").classList.add("hidden")
+    document.getElementById("auth_page").classList.remove("hidden")
+    document.getElementById("auth_page").classList.add("active")
+}
+
+// ============================================================
+// APP: Enter main app after login
+// ============================================================
+function enterApp() {
+    document.getElementById("auth_page").classList.add("hidden")
+    document.getElementById("app_page").classList.remove("hidden")
+    updateNavUser()
+    loadDashboard()
+}
+
+// ============================================================
+// NAV: Update navbar with current user info
+// ============================================================
+function updateNavUser() {
+    document.getElementById("nav_name").textContent = currentUser.name
+    const avatar = document.getElementById("nav_avatar")
+    avatar.textContent = currentUser.name[0].toUpperCase()
+    avatar.style.background = currentUser.avatar_color
+}
+
+// ============================================================
+// NAV: Switch between tabs
+// ============================================================
+function showTab(tab) {
+    // Hide all tab contents
+    document.querySelectorAll(".tab-content").forEach(t => {
+        t.classList.add("hidden")
+        t.classList.remove("active")
+    })
+    // Remove active from all nav tabs
+    document.querySelectorAll(".nav-tab").forEach(t => {
+        t.classList.remove("active")
+    })
+    // Show selected tab
+    document.getElementById(`tab_content_${tab}`).classList.remove("hidden")
+    document.getElementById(`tab_content_${tab}`).classList.add("active")
+    document.getElementById(`tab_${tab}`).classList.add("active")
+
+    // Load data for tab
+    if (tab === "network") loadNetwork()
+    if (tab === "fun") loadLeaderboard()
+}
+
+// ============================================================
+// DASHBOARD: Load all dashboard data
+// ============================================================
+async function loadDashboard() {
+    showLoader("Loading your dashboard...")
+    await Promise.all([
+        loadProfile(),
+        loadFriends(),
+        loadRequests(),
+        loadSuggestions(),
+        loadAllUsers()
+    ])
+    hideLoader()
+    logOp(`[HASH TABLE] Dashboard loaded for '${currentUser.id}' — O(1)`, "hash")
+}
+
+// ============================================================
+// PROFILE: Load current user profile
+// ============================================================
+async function loadProfile() {
+    const res = await fetch(`/user/${currentUser.id}`)
+    const data = await res.json()
+    if (!data.success) return
+
+    const user = data.user
+    currentUser = { ...currentUser, ...user }
+
+    // Update profile card
+    const avatar = document.getElementById("profile_avatar")
+    avatar.textContent = user.name[0].toUpperCase()
+    avatar.style.background = user.avatar_color
+
+    document.getElementById("profile_name").textContent = user.name
+    document.getElementById("profile_id").textContent = `@${user.id}`
+    document.getElementById("profile_bio").textContent = user.bio
+
+    // Update stats
+    document.getElementById("stat_friends").textContent = user.friends.length
+    document.getElementById("stat_requests").textContent = user.pending_requests.length
+}
+
+// ============================================================
+// FRIENDS: Load friends list
+// ============================================================
+async function loadFriends() {
+    const res = await fetch(`/user/${currentUser.id}`)
+    const data = await res.json()
+    if (!data.success) return
+
+    const container = document.getElementById("friends_list")
+    const friends = data.user.friends_data
+
+    if (friends.length === 0) {
+        container.innerHTML = '<p class="empty-msg">No friends yet — add some!</p>'
+        return
+    }
+
+    container.innerHTML = friends.map(f => `
+        <div class="friend-item">
+            <div class="f-avatar" style="background:${f.avatar_color}">
+                ${f.name[0].toUpperCase()}
+            </div>
+            <div class="f-info">
+                <span class="f-name">${f.name}</span>
+                <span class="f-id">@${f.id}</span>
+            </div>
+            <button class="unfriend-btn"
+                onclick="removeFriend('${f.id}')">Unfriend</button>
+        </div>
+    `).join("")
+}
+
+// ============================================================
+// REQUESTS: Load pending friend requests
+// ============================================================
+async function loadRequests() {
+    const res = await fetch(`/user/${currentUser.id}`)
+    const data = await res.json()
+    if (!data.success) return
+
+    const requests = data.user.pending_requests
+    document.getElementById("stat_requests").textContent = requests.length
+
+    const container = document.getElementById("requests_list")
+
+    if (requests.length === 0) {
+        container.innerHTML = '<p class="empty-msg">No pending requests</p>'
+        return
+    }
+
+    container.innerHTML = requests.map(from_id => {
+        const user = allUsers.find(u => u.id === from_id)
+        const name = user ? user.name : from_id
+        const color = user ? user.avatar_color : "#1877f2"
+        return `
+            <div class="request-item">
+                <div class="f-avatar" style="background:${color}">
+                    ${name[0].toUpperCase()}
+                </div>
+                <div class="f-info">
+                    <span class="f-name">${name}</span>
+                    <span class="f-id">@${from_id}</span>
+                </div>
+                <div class="request-btns">
+                    <button class="accept-btn"
+                        onclick="acceptRequest('${from_id}')">Accept</button>
+                    <button class="decline-btn"
+                        onclick="declineRequest('${from_id}')">Decline</button>
+                </div>
+            </div>
+        `
+    }).join("")
+}
+
+// ============================================================
+// SUGGESTIONS: Load BFS friend suggestions
+// ============================================================
+async function loadSuggestions() {
+    showLoader("Running BFS Algorithm...")
+    const res = await fetch(`/suggestions/${currentUser.id}`)
+    const data = await res.json()
+    hideLoader()
+
+    logOp(`[BFS] Friend suggestions computed — O(V+E)`, "graph")
+    logOp(`[INSERTION SORT] Suggestions ranked by mutual friends — O(n²)`, "sort")
+
+    const container = document.getElementById("suggestions_list")
+    document.getElementById("stat_suggestions").textContent = data.suggestions.length
+
+    if (data.suggestions.length === 0) {
+        container.innerHTML = '<p class="empty-msg">No suggestions yet — add more users!</p>'
+        return
+    }
+
+    container.innerHTML = data.suggestions.map(s => `
+        <div class="suggest-item">
+            <div class="f-avatar" style="background:${s.avatar_color}">
+                ${s.name[0].toUpperCase()}
+            </div>
+            <div class="f-info">
+                <span class="f-name">${s.name}</span>
+                <span class="f-id">${s.mutual_friends} mutual friend(s)</span>
+            </div>
+            <button class="add-btn" onclick="sendRequest('${s.id}')">+ Add</button>
+        </div>
+    `).join("")
+}
+
+// ============================================================
+// USERS: Load all users for search
+// ============================================================
+async function loadAllUsers() {
+    const res = await fetch("/users")
+    const data = await res.json()
+    allUsers = data.users
+}
+
+// ============================================================
+// SEARCH: Search users by name or ID
+// ============================================================
+function searchUsers() {
+    const query = document.getElementById("search_input").value.toLowerCase().trim()
+    const container = document.getElementById("search_results")
+
+    if (!query) {
+        container.innerHTML = '<p class="empty-msg">Start typing to search...</p>'
+        return
+    }
+
+    logOp(`[SEARCH] Linear search for '${query}' — O(n)`, "sort")
+
+    const results = allUsers.filter(u =>
+        u.name.toLowerCase().includes(query) ||
+        u.id.toLowerCase().includes(query)
+    )
+
+    if (results.length === 0) {
+        container.innerHTML = '<p class="empty-msg">No users found</p>'
+        return
+    }
+
+    container.innerHTML = results.map(u => `
+        <div class="friend-item">
+            <div class="f-avatar" style="background:${u.avatar_color}">
+                ${u.name[0].toUpperCase()}
+            </div>
+            <div class="f-info">
+                <span class="f-name">${u.name}</span>
+                <span class="f-id">@${u.id} · ${u.friend_count} friends</span>
+            </div>
+            ${u.id !== currentUser.id ?
+                `<button class="add-btn" onclick="sendRequest('${u.id}')">+ Add</button>`
+                : '<span class="you-badge">You</span>'
+            }
+        </div>
+    `).join("")
+}
+
+// ============================================================
+// FRIEND ACTIONS
+// ============================================================
+async function sendRequest(to_id) {
+    showLoader("Sending request...")
+    const res = await fetch("/send_request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from_id: currentUser.id, to_id })
+    })
+    const data = await res.json()
+    hideLoader()
+    logOp(`[HASH TABLE] Friend request sent to '${to_id}' — O(1)`, "hash")
+    await loadDashboard()
+}
+
+async function acceptRequest(from_id) {
+    showLoader("Accepting request...")
+    const res = await fetch("/accept_request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: currentUser.id, from_id })
+    })
+    const data = await res.json()
+    hideLoader()
+    logOp(`[GRAPH] New edge added — friendship created — O(1)`, "graph")
+    logOp(`[HASH TABLE] Friends list updated — O(1)`, "hash")
+    await loadDashboard()
+}
+
+async function declineRequest(from_id) {
+    await fetch("/decline_request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: currentUser.id, from_id })
+    })
+    await loadDashboard()
+}
+
+async function removeFriend(friend_id) {
+    showLoader("Removing friend...")
+    await fetch("/remove_friend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user1_id: currentUser.id, user2_id: friend_id })
+    })
+    hideLoader()
+    logOp(`[GRAPH] Edge removed — unfriended '${friend_id}' — O(E)`, "graph")
+    await loadDashboard()
+}
+
+// ============================================================
+// BIO: Edit bio
+// ============================================================
+async function editBio() {
+    const newBio = prompt("Edit your bio:", currentUser.bio)
+    if (!newBio) return
+    await fetch("/update_bio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: currentUser.id, bio: newBio })
+    })
+    currentUser.bio = newBio
+    document.getElementById("profile_bio").textContent = newBio
+}
+
+// ============================================================
+// NETWORK VISUALIZER
+// Draws the graph on a canvas — nodes = users, edges = friends
+// ============================================================
+async function loadNetwork() {
+    showLoader("Building network graph...")
+    const res = await fetch("/graph_data")
+    const data = await res.json()
+    hideLoader()
+
+    if (!data.success) return
+
+    const canvas = document.getElementById("network_canvas")
+    const ctx = canvas.getContext("2d")
+    const W = canvas.offsetWidth
+    const H = 480
+    canvas.width = W
+    canvas.height = H
+
+    const nodes = data.nodes
+    const edges = data.edges
+
+    // Position nodes in a circle
+    const positions = {}
+    const cx = W / 2
+    const cy = H / 2
+    const radius = Math.min(W, H) * 0.35
+
+    nodes.forEach((node, i) => {
+        const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2
+        positions[node.id] = {
+            x: cx + radius * Math.cos(angle),
+            y: cy + radius * Math.sin(angle),
+            ...node
+        }
+    })
+
+    // Clear canvas
+    ctx.clearRect(0, 0, W, H)
+
+    // Draw edges first
+    ctx.strokeStyle = "#c0c0c0"
+    ctx.lineWidth = 1.5
+    edges.forEach(edge => {
+        const from = positions[edge.from]
+        const to = positions[edge.to]
+        if (!from || !to) return
+        ctx.beginPath()
+        ctx.moveTo(from.x, from.y)
+        ctx.lineTo(to.x, to.y)
+        ctx.stroke()
+    })
+
+    // Draw nodes on top
+    nodes.forEach(node => {
+        const pos = positions[node.id]
+        if (!pos) return
+        const r = 24 + node.friend_count * 3
+
+        // Circle
+        ctx.beginPath()
+        ctx.arc(pos.x, pos.y, r, 0, 2 * Math.PI)
+        ctx.fillStyle = node.avatar_color
+        ctx.fill()
+        ctx.strokeStyle = "#fff"
+        ctx.lineWidth = 2
+        ctx.stroke()
+
+        // Initial letter
+        ctx.fillStyle = "#fff"
+        ctx.font = `bold ${r * 0.7}px sans-serif`
+        ctx.textAlign = "center"
+        ctx.textBaseline = "middle"
+        ctx.fillText(node.name[0].toUpperCase(), pos.x, pos.y)
+
+        // Name label
+        ctx.fillStyle = "#333"
+        ctx.font = "12px sans-serif"
+        ctx.textAlign = "center"
+        ctx.fillText(node.name, pos.x, pos.y + r + 14)
+    })
+
+    logOp(`[GRAPH] Network visualized — ${nodes.length} nodes, ${edges.length} edges`, "graph")
+}
+
+// ============================================================
+// FUN: Six Degrees of Separation
+// ============================================================
+async function sixDegrees() {
+    const start = document.getElementById("six_start").value.trim()
+    const end = document.getElementById("six_end").value.trim()
+    const result = document.getElementById("six_result")
+
+    if (!start || !end) return
+
+    showLoader("Running BFS — finding shortest path...")
+    const res = await fetch("/six_degrees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ start_id: start, end_id: end })
+    })
+    const data = await res.json()
+    hideLoader()
+
+    result.classList.remove("hidden")
+    logOp(`[BFS - SIX DEGREES] Path search: '${start}' → '${end}' — O(V+E)`, "graph")
+
+    if (!data.success) {
+        result.innerHTML = `<p class="error-msg">No connection found between these users!</p>`
+        return
+    }
+
+    const pathHTML = data.path.map((user, i) => `
+        <div class="path-node">
+            <div class="path-avatar" style="background:${user.avatar_color}">
+                ${user.name[0].toUpperCase()}
+            </div>
+            <span>${user.name}</span>
+        </div>
+        ${i < data.path.length - 1 ? '<div class="path-arrow">→</div>' : ''}
+    `).join("")
+
+    result.innerHTML = `
+        <div class="degrees-badge">${data.degrees} degree(s) of separation</div>
+        <div class="path-chain">${pathHTML}</div>
+    `
+}
+
+// ============================================================
+// FUN: Friend Leaderboard
+// ============================================================
+async function loadLeaderboard() {
+    const res = await fetch("/leaderboard")
+    const data = await res.json()
+
+    const medals = ["🥇", "🥈", "🥉"]
+    const container = document.getElementById("leaderboard_list")
+
+    logOp(`[INSERTION SORT] Leaderboard ranked — O(n²)`, "sort")
+
+    container.innerHTML = data.leaderboard.map((user, i) => `
+        <div class="leader-item ${i < 3 ? 'top-three' : ''}">
+            <span class="leader-rank">${medals[i] || `#${i + 1}`}</span>
+            <div class="f-avatar" style="background:${user.avatar_color}">
+                ${user.name[0].toUpperCase()}
+            </div>
+            <div class="f-info">
+                <span class="f-name">${user.name}</span>
+                <span class="f-id">@${user.id}</span>
+            </div>
+            <span class="leader-count">${user.friend_count} friends</span>
+        </div>
+    `).join("")
+}
+
+// ============================================================
+// FUN: Friendship Strength Meter
+// ============================================================
+async function checkStrength() {
+    const u1 = document.getElementById("strength_u1").value.trim()
+    const u2 = document.getElementById("strength_u2").value.trim()
+    if (!u1 || !u2) return
+
+    showLoader("Calculating friendship strength...")
+    const res = await fetch("/strength", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user1_id: u1, user2_id: u2 })
+    })
+    const data = await res.json()
+    hideLoader()
+
+    const result = document.getElementById("strength_result")
+    result.classList.remove("hidden")
+
+    const pct = data.strength
+    document.getElementById("strength_names").textContent = `${u1} & ${u2}`
+    document.getElementById("strength_pct").textContent = `${pct}%`
+    document.getElementById("strength_bar").style.width = `${pct}%`
+
+    let msg = ""
+    let color = ""
+    if (pct === 0) { msg = "No mutual friends yet!"; color = "#e74c3c" }
+    else if (pct < 30) { msg = "Just getting started!"; color = "#f39c12" }
+    else if (pct < 60) { msg = "Good connection!"; color = "#3498db" }
+    else if (pct < 90) { msg = "Strong friendship!"; color = "#2ecc71" }
+    else { msg = "Best friends! 🎉"; color = "#9b59b6" }
+
+    document.getElementById("strength_bar").style.background = color
+    document.getElementById("strength_msg").textContent = msg
+    logOp(`[HASH TABLE] Friendship strength: ${u1} & ${u2} = ${pct}% — O(1)`, "hash")
+}
+
+// ============================================================
+// FUN: Most Popular User
+// ============================================================
+async function mostPopular() {
+    const res = await fetch("/leaderboard")
+    const data = await res.json()
+    const top = data.leaderboard[0]
+    const result = document.getElementById("popular_result")
+    result.classList.remove("hidden")
+
+    if (!top) {
+        result.innerHTML = `<p class="empty-msg">No users yet!</p>`
+        return
+    }
+
+    result.innerHTML = `
+        <div class="popular-card">
+            <div class="crown">👑</div>
+            <div class="pop-avatar" style="background:${top.avatar_color}">
+                ${top.name[0].toUpperCase()}
+            </div>
+            <h3>${top.name}</h3>
+            <p>@${top.id}</p>
+            <div class="pop-count">${top.friend_count} friends</div>
+        </div>
+    `
+    logOp(`[INSERTION SORT] Most popular: '${top.name}' — O(n²)`, "sort")
+}
+
+// ============================================================
+// ON PAGE LOAD — check if user is already logged in
+// ============================================================
+window.onload = async () => {
+    const res = await fetch("/me")
+    const data = await res.json()
+    if (data.success) {
+        currentUser = data.user
+        enterApp()
+    }
+}
+
+</script>
+</body>
+</html>
